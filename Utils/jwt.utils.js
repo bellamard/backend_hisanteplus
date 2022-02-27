@@ -8,7 +8,6 @@ module.exports = {
     return jwt.sign(
       {
         patientId: patientData.id,
-        dateId: patient.createdAt,
       },
       JWT_SIGN_TOKEN,
       {
