@@ -2,6 +2,9 @@ const bcrypt = require("bcrypt");
 const jwtUtils = require("../Utils/jwt.utils");
 const models = require("../models");
 
+const EMAIL_REGEX =
+  /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+const PASSWORD_REGEX = /^(?=.*\d).{4,8}$/;
 module.exports = {
   registre: (req, res) => {
     const {
@@ -26,13 +29,18 @@ module.exports = {
       });
     }
     //
-    if (mail_patien) {
+    if (!EMAIL_REGEX.test(mail_patient)) {
       res.status(400).json({
         error: "remplissez correctement l'email",
       });
     }
+    if (!PASSWORD_REGEX.test(motpasse_patient)) {
+      res.status(400).json({
+        error: "le mot de passe n'est repond pas au norme de securité requis ",
+      });
+    }
 
-    if (phone_patient.length >= 10 || phone_patient.length <= 8) {
+    if (phone_patient.length >= 10 || phone_patient.length <= 9) {
       res.status(400).json({
         error: "le numéro de téléphone est incorrect",
       });
