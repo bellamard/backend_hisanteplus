@@ -3,40 +3,6 @@ const jwtUtils = require("../Utils/jwt.utils");
 const models = require("../models");
 
 module.exports = {
-  login: (req, res) => {
-    const { email, password } = req.body;
-
-    if (email === null || password === null) {
-      res.status(400).json({ error: "les informations incompletes" });
-    }
-    models.patient
-      .findOne({
-        where: { mail_patient: email },
-      })
-      .then((patient) => {
-        if (patient) {
-          bcrypt.compare(
-            password,
-            patient.motpasse_patient,
-            (errBcrypt, resBcrypt) => {
-              if (resBcrypt) {
-                return res.status(200).json({
-                  patientId: patient.id,
-                  token: jwtUtils.generateTokenForPatient(patient),
-                });
-              } else {
-                return res.status(403).json({ error: "Mot de passe invalide" });
-              }
-            }
-          );
-        } else {
-          return res.status(404).json({ error: "le Patient n'existe pas" });
-        }
-      })
-      .catch((err) => {
-        return res.status(500).json({ error: `${err}. verifier la connexion` });
-      });
-  },
   registre: (req, res) => {
     const {
       nom_patient,
@@ -60,6 +26,18 @@ module.exports = {
       });
     }
     //
+    if (mail_patien) {
+      res.status(400).json({
+        error: "remplissez correctement l'email",
+      });
+    }
+
+    if (phone_patient.length >= 10 || phone_patient.length <= 8) {
+      res.status(400).json({
+        error: "le numéro de téléphone est incorrect",
+      });
+    }
+    //
     models.patient
       .findOne({
         attributes: ["phone_patient"],
@@ -72,7 +50,7 @@ module.exports = {
               .create({
                 nom_patient: nom_patient,
                 phone_patient: phone_patient,
-                motpasse_patient: motpasse_patient,
+                motpasse_patient: bcryptPass,
                 adresse_patient: adresse_patient,
                 sexe_patient: sexe_patient,
                 mail_patient: mail_patient,
@@ -101,5 +79,41 @@ module.exports = {
           .json({ error: "Une erreur est survenue dans le serveur" });
       });
     //
+  },
+  login: (req, res) => {
+    const { telephone, motpasse } = req.body;
+
+    if (telephone === null || motpasse === null) {
+      res.status(400).json({ error: "les informations incompletes" });
+    }
+    models.patient
+      .findOne({
+        where: { phone_patient: telephone },
+      })
+      .then((patient) => {
+        if (patient) {
+          bcrypt.compare(
+            motpasse,
+            patient.motpasse_patient,
+            (errBcrypt, resBcrypt) => {
+              if (resBcrypt) {
+                return res.status(200).json({
+                  patientId: patient.id,
+                  token: jwtUtils.generateTokenForPatient(patient),
+                });
+              } else {
+                return res
+                  .status(403)
+                  .json({ error: "Mot de passe invalide  _ " + resBcrypt });
+              }
+            }
+          );
+        } else {
+          return res.status(404).json({ error: "le Patient n'existe pas" });
+        }
+      })
+      .catch((err) => {
+        return res.status(500).json({ error: `${err}. verifier la connexion` });
+      });
   },
 };
