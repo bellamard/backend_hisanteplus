@@ -1,36 +1,41 @@
 "use strict";
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("rdvs", {
+    await queryInterface.createTable("Consultations", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      id_patient: {
-        allowNull: false,
+      medecinId: {
         type: Sequelize.INTEGER,
-        references: {
-          model: "patients",
-          key: "id",
-        },
-      },
-      id_medecin: {
         allowNull: false,
-        type: Sequelize.INTEGER,
         references: {
           model: "medecins",
           key: "id",
         },
       },
-      motif: {
+      patientId: {
+        type: Sequelize.INTEGER,
         allowNull: false,
-        type: Sequelize.STRING,
+        references: {
+          model: "patients",
+          key: "id",
+        },
       },
-      date_heure_rdv: {
+      type: {
+        type: Sequelize.STRING,
         allowNull: false,
+      },
+      valider: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+      },
+      dateConsultation: {
         type: Sequelize.DATE,
+        allowNull: false,
+        defaultValues: Sequelize.Now,
       },
       createdAt: {
         allowNull: false,
@@ -43,6 +48,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("rdvs");
+    await queryInterface.dropTable("Consultations");
   },
 };

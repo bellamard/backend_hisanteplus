@@ -26,29 +26,29 @@ module.exports = {
       sexe_patient === null ||
       mail_patient === null
     ) {
-      res.status(400).json({
+      return res.status(400).json({
         error: "Veuillez remplir tous les champs",
       });
     } //
     if (nom_patient.length <= 2) {
-      res.status(400).json({
+      return res.status(400).json({
         error: "remplissez correctement les noms",
       });
     }
     //
     if (!EMAIL_REGEX.test(mail_patient)) {
-      res.status(400).json({
+      return res.status(400).json({
         error: "remplissez correctement l'email",
       });
     }
     if (!PASSWORD_REGEX.test(motpasse_patient)) {
-      res.status(400).json({
+      return res.status(400).json({
         error: "le mot de passe n'est repond pas au norme de securité requis ",
       });
     }
 
     if (phone_patient.length > 10 || phone_patient.length < 9) {
-      res.status(400).json({
+      return res.status(400).json({
         error: "le numéro de téléphone est incorrect",
       });
     }
@@ -58,16 +58,16 @@ module.exports = {
       (done) => {
         models.patient
           .findOne({
-            attributes: ["phone_patient"],
-            where: { phone_patient: phone_patient },
+            attributes: ["phonePatient"],
+            where: { phonePatient: phone_Patient },
           })
           .then((patient) => {
             done(null, patient);
           })
           .catch((err) => {
-            return res
-              .status(500)
-              .json({ error: "Une erreur est survenue dans le serveur" });
+            return res.status(500).json({
+              error: "Une erreur est survenue dans le serveur!!! " + err,
+            });
           });
       },
       (patient, done) => {
@@ -76,27 +76,27 @@ module.exports = {
             done(null, patient, bcryptPass);
           });
         } else {
-          res.status(403).json({ error: "un probleme de Hashing" });
+          return res.status(403).json({ error: "un probleme de Hashing" });
         }
       },
     ]);
 
     models.patient
       .findOne({
-        attributes: ["phone_patient"],
-        where: { phone_patient: phone_patient },
+        attributes: ["phonePatient"],
+        where: { phonePatient: phone_patient },
       })
       .then((patient) => {
         if (!patient) {
           bcrypt.hash(motpasse_patient, 10, (error, bcryptPass) => {
             const new_patient = models.patient
               .create({
-                nom_patient: nom_patient,
-                phone_patient: phone_patient,
-                motpasse_patient: bcryptPass,
-                adresse_patient: adresse_patient,
-                sexe_patient: sexe_patient,
-                mail_patient: mail_patient,
+                nomPatient: nom_patient,
+                phonePatient: phone_patient,
+                passwordPatient: bcryptPass,
+                adressPatient: adresse_patient,
+                sexePatient: sexe_patient,
+                mailPatient: mail_patient,
               })
               .then((new_patient) => {
                 return res.status(201).json({
@@ -119,7 +119,7 @@ module.exports = {
       .catch((err) => {
         return res
           .status(500)
-          .json({ error: "Une erreur est survenue dans le serveur" });
+          .json({ error: "Une erreur est survenue dans le serveur " + err });
       });
     //
   },
@@ -131,13 +131,13 @@ module.exports = {
     }
     models.patient
       .findOne({
-        where: { phone_patient: telephone },
+        where: { phonePatient: telephone },
       })
       .then((patient) => {
         if (patient) {
           bcrypt.compare(
             motpasse,
-            patient.motpasse_patient,
+            patient.passwordPatient,
             (errBcrypt, resBcrypt) => {
               if (resBcrypt) {
                 return res.status(200).json({
@@ -172,7 +172,7 @@ module.exports = {
 
     models.patient
       .findOne({
-        attributes: ["id", "nom_patient", "phone_patient"],
+        attributes: ["id", "nomPatient", "phonePatient"],
         where: { id: userId },
       })
       .then((patient) => {
@@ -195,7 +195,7 @@ module.exports = {
         (data) => {
           models.patient
             .findOne({
-              attributes: ["id", "adresse_patient"],
+              attributes: ["id", "adressPatient"],
               where: { id: userId },
             })
             .then((patientfound) => data(null, patientfound))
@@ -209,7 +209,7 @@ module.exports = {
           if (patientfound) {
             patientfound
               .update({
-                adresse_patient: adress ? adress : patientfound.adresse_patient,
+                adressPatient: adress ? adress : patientfound.adressPatient,
               })
               .then(() => data(patientfound))
               .catch((err) =>
@@ -236,79 +236,81 @@ module.exports = {
   updatePasswordPatientId: (req, res) => {
     const headerAuth = req.headers["authorization"];
     const userId = jwtUtils.getPatientId(headerAuth);
-    const password = req.body.password;
-    const confirmPassword = req.body.confirmPassword;
+
+    const { password, confirmPassword } = req.body;
     if (!PASSWORD_REGEX.test(confirmPassword)) {
-      res.status(400).json({
+      return res.status(400).json({
         error:
           "votre nouveau mot de passe n'est repond pas au norme de securité requis ",
       });
-    }
-    async_Lib.waterfall(
-      [
-        (data) => {
-          models.patient
-            .findOne({
-              where: { id: userId },
-            })
-            .then((patientfound) => {
-              if (patientfound) {
-                bcrypt.compare(
-                  password,
-                  patientfound.motpasse_patient,
-                  (errBcrypt, resBcrypt) => {
-                    if (resBcrypt) {
-                      return data(null, patientfound);
-                    } else {
-                      return res
-                        .status(403)
-                        .json({ error: " Mot de passe actuel invalide" });
+    } else {
+      async_Lib.waterfall(
+        [
+          (data) => {
+            models.patient
+              .findOne({
+                where: { id: userId },
+              })
+              .then((patientfound) => {
+                if (patientfound) {
+                  bcrypt.compare(
+                    password,
+                    patientfound.passwordPatient,
+                    (errBcrypt, resBcrypt) => {
+                      if (resBcrypt) {
+                        return data(null, patientfound);
+                      } else {
+                        return res
+                          .status(403)
+                          .json({ error: " Mot de passe actuel invalide" });
+                      }
                     }
-                  }
-                );
-              }
-            })
-            .catch((err) => {
-              return res
-                .status(500)
-                .json({ error: "un probleme de verification du patient" });
-            });
-        },
-        (patientfound, data) => {
-          if (patientfound) {
-            bcrypt.hash(confirmPassword, 10, (error, bcryptPass) => {
-              patientfound
-                .update({
-                  motpasse_patient: bcryptPass
-                    ? bcryptPass
-                    : patientfound.motpasse_patient,
-                })
-                .then(() => {
-                  return data(patientfound);
-                })
-                .catch((err) =>
-                  res.status(500).json({
-                    error: "ne peut pas modifier le mot de passe. ressayer!!!",
+                  );
+                }
+              })
+              .catch((err) => {
+                return res
+                  .status(500)
+                  .json({ error: "un probleme de verification du patient" });
+              });
+          },
+          (patientfound, data) => {
+            if (patientfound) {
+              bcrypt.hash(confirmPassword, 10, (error, bcryptPass) => {
+                patientfound
+                  .update({
+                    passwordPatient: bcryptPass
+                      ? bcryptPass
+                      : patientfound.passwordPatient,
                   })
-                );
-            });
+                  .then(() => {
+                    return data(patientfound);
+                  })
+                  .catch((err) =>
+                    res.status(500).json({
+                      error:
+                        "ne peut pas modifier le mot de passe. ressayer!!!",
+                    })
+                  );
+              });
+            } else {
+              res.status(404).json({ error: "le patient n'existe pas" });
+            }
+          },
+        ],
+        (patientfound) => {
+          if (patientfound) {
+            const id = patientfound.id;
+            return res
+              .status(201)
+              .json([{ id, message: " mot de passe modifier" }]);
           } else {
-            res.status(404).json({ error: "le patient n'existe pas" });
+            return res
+              .status(500)
+              .json({ error: "tu ne peux modifier l'adresse du patient" });
           }
-        },
-      ],
-      (patientfound) => {
-        if (patientfound) {
-          id = patientfound.id;
-          return res
-            .status(201)
-            .json([{ id, message: " mot de passe modifier" }]);
-        } else {
-          return res
-            .status(500)
-            .json({ error: "tu ne peux modifier l'adresse du patient" });
         }
-      }
-    );
+      );
+    }
   },
 };

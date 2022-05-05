@@ -8,27 +8,27 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      nom_patient: {
+      nomPatient: {
         allowNull: false,
         type: Sequelize.STRING,
       },
-      phone_patient: {
+      phonePatient: {
         allowNull: false,
         type: Sequelize.INTEGER,
       },
-      motpasse_patient: {
+      passwordPatient: {
         allowNull: false,
         type: Sequelize.STRING,
       },
-      adresse_patient: {
+      adressPatient: {
         allowNull: false,
         type: Sequelize.STRING,
       },
-      sexe_patient: {
+      sexePatient: {
         allowNull: false,
         type: Sequelize.STRING,
       },
-      mail_patient: {
+      mailPatient: {
         allowNull: true,
         type: Sequelize.STRING,
       },

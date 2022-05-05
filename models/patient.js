@@ -9,18 +9,17 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      models.patient.hasMany(models.consultation);
-      models.patient.hasMany(models.rdv);
+      models.patient.hasMany(models.Consultation);
     }
   }
   patient.init(
     {
-      nom_patient: DataTypes.STRING,
-      phone_patient: DataTypes.INTEGER,
-      motpasse_patient: DataTypes.STRING,
-      adresse_patient: DataTypes.STRING,
-      sexe_patient: DataTypes.STRING,
-      mail_patient: DataTypes.STRING,
+      nomPatient: DataTypes.STRING,
+      phonePatient: DataTypes.INTEGER,
+      passwordPatient: DataTypes.STRING,
+      adressPatient: DataTypes.STRING,
+      sexePatient: DataTypes.STRING,
+      mailPatient: DataTypes.STRING,
     },
     {
       sequelize,
