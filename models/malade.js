@@ -8,20 +8,17 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association
+      // define association here
       models.malade.belongsTo(models.Consultation, {
-        foreignKey: {
-          allowNull: false,
-        },
-      }),
-        models.malade.hasMany(models.intervention);
+        foreignKey: { allowNull: false },
+      });
     }
   }
   malade.init(
     {
       malady: DataTypes.STRING,
-      consultationId: DataTypes.INTEGER,
-      niveau: DataTypes.STRING,
+      level: DataTypes.STRING,
+      refId: DataTypes.INTEGER,
     },
     {
       sequelize,

@@ -9,17 +9,15 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      models.intervention.belongsTo(models.malade, {
-        foreignKey: {
-          allowNull: false,
-        },
+      models.intervention.belongsTo(models.Consultation, {
+        foreignKey: { allowNull: false },
       });
     }
   }
   intervention.init(
     {
-      maladeId: DataTypes.INTEGER,
       typeIntervention: DataTypes.STRING,
+      consultationId: DataTypes.INTEGER,
     },
     {
       sequelize,

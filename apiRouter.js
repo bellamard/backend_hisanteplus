@@ -2,6 +2,7 @@ const express = require("express");
 const patientControl = require("./Routes/patientControl");
 const medecinControl = require("./Routes/medecinControl");
 const consultatControl = require("./Routes/consultatControl");
+const maladieControl = require("./Routes/maladiControl");
 
 exports.router = (() => {
   const apiRouter = express.Router();
@@ -33,6 +34,14 @@ exports.router = (() => {
   apiRouter
     .route("/consultations/:consultationId/del")
     .delete(consultatControl.deleteConsult);
+
+  //route malade
+  apiRouter.route("/malades/:consultationId/").get(maladieControl.getMalade);
+  apiRouter
+    .route("/malades/:consultationId/")
+    .post(maladieControl.createMalade);
+  apiRouter.route("/malades/:consultationId/").put(maladieControl.updateMalady);
+  apiRouter.route("/malades/:consultationId/");
 
   return apiRouter;
 })();

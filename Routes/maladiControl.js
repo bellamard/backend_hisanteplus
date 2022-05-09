@@ -31,7 +31,13 @@ module.exports = {
               where: { id: userId },
             })
             .then((medecinFound) => {
-              data(null, medecinFound);
+              if (medecinFound) {
+                data(null, medecinFound);
+              } else {
+                return res
+                  .status(500)
+                  .json({ error: "le medecin n'existe pas" });
+              }
             })
             .catch((err) => {
               console.warn(err);
@@ -46,7 +52,13 @@ module.exports = {
             where: { id: consultationId, medecinId: medecinFound.id },
           })
             .then((consultationFound) => {
-              data(null, medecinFound, consultationFound);
+              if (consultationFound) {
+                data(null, medecinFound, consultationFound);
+              } else {
+                return res
+                  .status(403)
+                  .json({ error: "Operation la consultation n'existe pas " });
+              }
             })
             .catch((err) => {
               console.warn(err);
@@ -60,7 +72,7 @@ module.exports = {
           const createMalady = models.malade
             .create({
               malady,
-              niveau: level,
+              level,
               consultationId: consultationFound.id,
             })
             .then((maladyFound) => {
@@ -99,35 +111,48 @@ module.exports = {
     async_Lib.waterfall(
       [
         (data) => {
-          models.malade
-            .findOne({
-              attributes: { id },
-              where: { id: consultationId },
-            })
+          models.Consultation.findOne({
+            attributes: ["id"],
+            where: {
+              id: consultationId,
+              [Op.or]: [{ medecinId: userId }, { patientId: userId }],
+            },
+          })
             .then((consultationFound) => {
-              data(null, consultationFound);
+              if (consultationFound) {
+                data(null, consultationFound);
+              } else {
+                return res
+                  .status(403)
+                  .json({ error: "la consultation n'est pas trouvé" });
+              }
             })
             .catch((err) => {
               console.warn(err);
-              return res
-                .status(403)
-                .json({ error: "l'operation n'a pas aboutir" });
+              return res.status(403).json({
+                error:
+                  "l'operation de verifation de consultation n'a pas aboutir",
+              });
             });
         },
         (data, consultationFound) => {
           models.malade
-            .findOne({
-              attributes: { id, malady },
-              where: { consultationId: consultationFound.id },
+            .findAll({
+              where: { refId: consultationFound.id },
             })
-            .then((maladyFound) => {
-              data(maladyFound);
+            .then((maladeFound) => {
+              if (maladeFound) {
+                data(maladeFound);
+              } else {
+                return res
+                  .status(401)
+                  .json({ error: "la maladie n'existe pas" });
+              }
             })
             .catch((err) => {
               console.warn(err);
               return res.status(500).json({
-                error:
-                  "l'operation de l'affichage de la maladie n'a pas aboutir",
+                error: "l'operation affichage n'a pas aboutir ",
               });
             });
         },
@@ -144,7 +169,8 @@ module.exports = {
   updateMalady: (req, res) => {
     const headerAuth = req.headers["authorization"];
     const userId = jwtUtils.getPatientId(headerAuth);
-    const { consultationId, maladeId } = req.params;
+    const consultationId = req.params.consultationId;
+    const maladeId = req.query.maladyId;
     const { malady, level } = req.body;
     if (userId < 0) {
       return res
@@ -157,55 +183,169 @@ module.exports = {
     ) {
       return res.status(401).json({ error: "information incorrect" });
     }
-    async_Lib.waterfall([
-      (data) => {
-        models.Consultation.findOne({
-          attributes: { id },
-          where: { id: consultationId, medecinId: userId },
-        })
-          .then((consultationFound) => data(null, consultationFound))
-          .catch((err) => {
-            console.warn(err);
-            return res.status(500).json({
-              error:
-                "l'operation de verification de consultation n'a pas aboutir",
+    async_Lib.waterfall(
+      [
+        (data) => {
+          models.Consultation.findOne({
+            attributes: ["id"],
+            where: { id: consultationId, medecinId: userId },
+          })
+            .then((consultationFound) => {
+              if (consultationFound) {
+                data(null, consultationFound);
+              } else {
+                return res
+                  .status(403)
+                  .json({ error: "la consultation n'existe pas" });
+              }
+            })
+            .catch((err) => {
+              console.warn(err);
+              return res.status(500).json({
+                error:
+                  "l'operation de verification de consultation n'a pas aboutir",
+              });
             });
-          });
-      },
-      (data, consultationFound) => {
-        models.malade
-          .findOne({
-            attributes: { id },
-            where: { id: maladeId, consultationId: consultationFound.id },
-          })
-          .then((maladyFound) => {
-            data(null, maladyFound, consultationFound);
-          })
-          .catch((err) => {
-            console.warn(err);
-            return res.status(500).json({
-              error: "operation de verification de la maladie n'a pas aboutir ",
+        },
+        (data, consultationFound) => {
+          models.malade
+            .findOne({
+              where: { id: maladeId, consultationId: consultationFound.id },
+            })
+            .then((maladyFound) => {
+              if (maladyFound) {
+                data(null, maladyFound, consultationFound);
+              } else {
+                return res
+                  .status(403)
+                  .json({ error: "la maladie n'est pas trouvé" });
+              }
+            })
+            .catch((err) => {
+              console.warn(err);
+              return res.status(500).json({
+                error:
+                  "operation de verification de la maladie n'a pas aboutir ",
+              });
             });
-          });
-      },
-      (data, maladyFound, consultationFound) => {
-        maladyFound
-          .update({
-            malady: malady ? malady : maladyFound.malady,
-            niveau: level ? level : maladyFound.niveau,
-          })
-          .then((maladyUpdate) => {
-            data(maladyUpdate);
-          })
-          .catch((err) => {
-            console.warn(err);
-            return res.status(500).json({
-              error:
-                "l'operation de la modification de la maladie n' a pas aboutir",
+        },
+        (data, maladyFound, consultationFound) => {
+          maladyFound
+            .update({
+              malady: malady ? malady : maladyFound.malady,
+              level: level ? level : maladyFound.niveau,
+            })
+            .then((maladyUpdate) => {
+              data(maladyUpdate);
+            })
+            .catch((err) => {
+              console.warn(err);
+              return res.status(500).json({
+                error:
+                  "l'operation de la modification de la maladie n' a pas aboutir",
+              });
             });
-          });
-      },
-    ]);
+        },
+      ],
+      (maladyUpdate) => {
+        if (maladyUpdate) {
+          return res.status(201).json(maladyUpdate);
+        } else {
+          return res
+            .status(403)
+            .json({ error: " la modification n'a pas aboutir" });
+        }
+      }
+    );
   },
-  deleteMalade: (req, res) => {},
+  deleteMalade: (req, res) => {
+    const headerAuth = req.headers["authorization"];
+    const userId = jwtUtils.getPatientId(headerAuth);
+    const consultationId = req.params.consultationId;
+    const maladeId = req.query.maladyId;
+    const { malady, level } = req.body;
+    if (userId < 0) {
+      return res
+        .status(401)
+        .json({ error: "vous avez un probleme de token!!! " });
+    }
+    if (
+      (malady == null || malady === "") &&
+      (niveau == null || niveau === "")
+    ) {
+      return res.status(401).json({ error: "information incorrect" });
+    }
+    async_Lib.waterfall(
+      [
+        (data) => {
+          models.Consultation.findOne({
+            attributes: ["id"],
+            where: { id: consultationId, medecinId: userId },
+          })
+            .then((consultationFound) => {
+              if (consultationFound) {
+                data(null, consultationFound);
+              } else {
+                return res
+                  .status(403)
+                  .json({ error: "la consultation n'existe pas" });
+              }
+            })
+            .catch((err) => {
+              console.warn(err);
+              return res.status(500).json({
+                error:
+                  "l'operation de verification de consultation n'a pas aboutir",
+              });
+            });
+        },
+        (data, consultationFound) => {
+          models.malade
+            .findOne({
+              attributes: ["id"],
+              where: { id: maladeId, consultationId: consultationFound.id },
+            })
+            .then((maladyFound) => {
+              if (maladyFound) {
+                data(null, maladyFound, consultationFound);
+              } else {
+                return res
+                  .status(403)
+                  .json({ error: "la maladie n'est pas trouvé" });
+              }
+            })
+            .catch((err) => {
+              console.warn(err);
+              return res.status(500).json({
+                error:
+                  "operation de verification de la maladie n'a pas aboutir ",
+              });
+            });
+        },
+        (data, maladyFound, consultationFound) => {
+          maladyFound
+            .destroy()
+            .then((maladyDelete) => {
+              data(maladyDelete);
+            })
+            .catch((err) => {
+              console.warn(err);
+              return res.status(500).json({
+                error:
+                  "l'operation de la modification de la maladie n' a pas aboutir",
+              });
+            });
+        },
+      ],
+      (maladyDelete) => {
+        if (maladyDelete) {
+          return res.status(201).json(maladyDelete);
+        } else {
+          return res
+            .status(403)
+            .json({ error: " la modification n'a pas aboutir" });
+        }
+      }
+    );
+  },
 };

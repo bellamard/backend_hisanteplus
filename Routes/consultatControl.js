@@ -113,38 +113,47 @@ module.exports = {
     if (userId < 0) {
       return res.status(403).json({ error: "utilisateur non trouver" });
     }
-
-    models.Consultation.findAll({
-      order: [order != null ? order.split(":") : ["createdAt", "DESC"]],
-      attributes: fields !== "*" && fields != null ? fields.split(",") : null,
-      limit: !isNaN(limit) ? limit : null,
-      offset: !isNaN(offset) ? offset : null,
-      where: {
-        [Op.or]: [{ medecinId: userId }, { patientId: userId }],
-      },
-      include: [
-        {
-          model: models.patient,
-          attributes: ["nomPatient"],
-        },
-        {
-          model: models.medecin,
-          attributes: ["nomMedecin"],
+    async_Lib.waterfall(
+      [
+        (data) => {
+          models.Consultation.findAll({
+            order: [order != null ? order.split(":") : ["createdAt", "DESC"]],
+            attributes:
+              fields !== "*" && fields != null ? fields.split(",") : null,
+            limit: !isNaN(limit) ? limit : null,
+            offset: !isNaN(offset) ? offset : null,
+            where: {
+              [Op.or]: [{ medecinId: userId }, { patientId: userId }],
+            },
+            include: [
+              {
+                model: models.patient,
+                attributes: ["nomPatient"],
+              },
+              {
+                model: models.medecin,
+                attributes: ["nomMedecin"],
+              },
+            ],
+          })
+            .then((consultations) => {
+              data(consultations);
+            })
+            .catch((Err) => {
+              return res.status(500).json({
+                error: "probleme lors de l'operation de recuperation " + Err,
+              });
+            });
         },
       ],
-    })
-      .then((consultations) => {
+      (consultations) => {
         if (consultations) {
           return res.status(200).json(consultations);
         } else {
           return res.status(500).json({ error: "pas des consultations" });
         }
-      })
-      .catch((Err) => {
-        return res.status(500).json({
-          error: "probleme lors de l'operation de recuperation " + Err,
-        });
-      });
+      }
+    );
   },
   updateConsult: (req, res) => {
     const headerAuth = req.headers["authorization"];
