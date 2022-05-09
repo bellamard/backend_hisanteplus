@@ -113,6 +113,7 @@ module.exports = {
     if (userId < 0) {
       return res.status(403).json({ error: "utilisateur non trouver" });
     }
+
     models.Consultation.findAll({
       order: [order != null ? order.split(":") : ["createdAt", "DESC"]],
       attributes: fields !== "*" && fields != null ? fields.split(",") : null,
@@ -148,7 +149,8 @@ module.exports = {
   updateConsult: (req, res) => {
     const headerAuth = req.headers["authorization"];
     const userId = jwtUtils.getPatientId(headerAuth);
-    const { dateConsultation, typeConsultation } = req.body;
+    const { dateConsultation, typeConsultation, validerConsultation } =
+      req.body;
     const consultationId = parseInt(req.params.consultationId);
 
     if (consultationId <= 0 || consultationId === null) {
@@ -197,6 +199,9 @@ module.exports = {
                 dateConsultation: dateConsultation
                   ? dateConsultation
                   : consultationFound.dateConsultation,
+                valider: validerConsultation
+                  ? validerConsultation
+                  : consultationFound.valider,
               })
               .then((consultationUpdate) => {
                 data(consultationUpdate);

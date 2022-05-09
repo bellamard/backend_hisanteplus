@@ -186,6 +186,70 @@ module.exports = {
         res.status(500).json({ error: "l'operation n'a pas aboutir" });
       });
   },
+
+  getPatients: (req, res) => {
+    const headerAuth = req.headers["authorization"];
+    const userId = jwtUtils.getPatientId(headerAuth);
+    const fields = req.query.fields;
+    const limit = parseInt(req.query.limit);
+    const offset = parseInt(req.query.offset);
+    const order = req.query.order;
+    if (userId < 0) {
+      return res
+        .status(400)
+        .json({ error: "vous avez un probleme de token!!! " });
+    }
+
+    async_Lib.waterfall(
+      [
+        (data) =>
+          models.medecin
+            .findOne({
+              attributes: ["id", "numOrdreMedecin"],
+              where: { id: userId },
+            })
+            .then((medecinFound) => {
+              if (medecinFound) {
+                data(null, medecinFound);
+              } else {
+                res.status(403).json({ error: "le medecin n'existe pas" });
+              }
+            })
+            .catch((err) => {
+              console.warn(err);
+              res.status(500).json({ error: "l'operation n'a pas aboutir" });
+            }),
+        (medecinFound, data) => {
+          models.patient
+            .findAll({
+              order: [order != null ? order.split(":") : ["createdAt", "DESC"]],
+              attributes:
+                fields !== "*" && fields != null
+                  ? fields.split(",")
+                  : ["id", "nomPatient", "phonePatient", "adressPatient"],
+              limit: !isNaN(limit) ? limit : null,
+              offset: !isNaN(offset) ? offset : null,
+            })
+            .then((patientAll) => {
+              data(patientAll);
+            })
+            .catch((err) => {
+              console.warn(err);
+              return res.status(500).json("l'operation n'a pas aboutir");
+            });
+        },
+      ],
+      (patientAll) => {
+        if (patientAll) {
+          return res.status(201).json(patientAll);
+        } else {
+          return res.status(403).json({
+            error: "le patient n'est pas trouvée",
+          });
+        }
+      }
+    );
+  },
   updatePatientId: (req, res) => {
     const headerAuth = req.headers["authorization"];
     const userId = jwtUtils.getPatientId(headerAuth);

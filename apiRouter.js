@@ -9,6 +9,7 @@ exports.router = (() => {
   apiRouter.route("/patients/login").post(patientControl.login);
   apiRouter.route("/patients/registre").post(patientControl.registre);
   apiRouter.route("/patients/me").get(patientControl.getPatientProfil);
+  apiRouter.route("/patients/all").get(patientControl.getPatients);
   apiRouter.route("/patients/me").put(patientControl.updatePatientId);
   apiRouter
     .route("/patients/updatePassword")
