@@ -10,7 +10,9 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       models.malade.belongsTo(models.Consultation, {
-        foreignKey: { allowNull: false },
+        foreignKey: {
+          allowNull: false,
+        },
       });
     }
   }
@@ -18,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       malady: DataTypes.STRING,
       level: DataTypes.STRING,
-      refId: DataTypes.INTEGER,
+      consultationId: DataTypes.INTEGER,
     },
     {
       sequelize,

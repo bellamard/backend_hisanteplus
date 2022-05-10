@@ -75,8 +75,8 @@ module.exports = {
               level,
               consultationId: consultationFound.id,
             })
-            .then((maladyFound) => {
-              data(maladyFound);
+            .then((createMalady) => {
+              data(createMalady);
             })
             .catch((err) => {
               console.warn(err);
@@ -86,9 +86,9 @@ module.exports = {
             });
         },
       ],
-      (maladyFound) => {
-        if (maladyFound) {
-          return res.status(201).json(maladyFound);
+      (createMalady) => {
+        if (createMalady) {
+          return res.status(201).json(createMalady);
         } else {
           return res.status(403).json({ error: "la maladie n'est pas crée" });
         }
@@ -99,7 +99,7 @@ module.exports = {
   getMalade: (req, res) => {
     const headerAuth = req.headers["authorization"];
     const userId = jwtUtils.getPatientId(headerAuth);
-    const consultationId = req.params.consultationId;
+    const consultationId = parseInt(req.params.consultationId);
     if (consultationId == null || consultationId === "") {
       return res.status(401).json({ error: "la reference est incorrects " });
     }
@@ -119,41 +119,43 @@ module.exports = {
             },
           })
             .then((consultationFound) => {
-              if (consultationFound) {
+              if (!consultationFound) {
+                return res
+                  .status(403)
+                  .json({ error: "la consultation n'existe pas" });
+              } else {
                 data(null, consultationFound);
+              }
+            })
+            .catch((err) => {
+              console.warn(err);
+              return res
+                .status(500)
+                .json({ error: "l'operation de consultation n'a pas aboutir" });
+            });
+        },
+        (consultationFound, data) => {
+          models.malade
+            .findAll({
+              attributes: ["id", "malady", "level"],
+              where: {
+                consultationId: consultationFound.id,
+              },
+            })
+            .then((maladyFound) => {
+              if (maladyFound.length > 0) {
+                data(maladyFound);
               } else {
                 return res
                   .status(403)
-                  .json({ error: "la consultation n'est pas trouvé" });
+                  .json({ error: "la maladie n'est pas trouvé" });
               }
             })
             .catch((err) => {
               console.warn(err);
-              return res.status(403).json({
-                error:
-                  "l'operation de verifation de consultation n'a pas aboutir",
-              });
-            });
-        },
-        (data, consultationFound) => {
-          models.malade
-            .findAll({
-              where: { refId: consultationFound.id },
-            })
-            .then((maladeFound) => {
-              if (maladeFound) {
-                data(maladeFound);
-              } else {
-                return res
-                  .status(401)
-                  .json({ error: "la maladie n'existe pas" });
-              }
-            })
-            .catch((err) => {
-              console.warn(err);
-              return res.status(500).json({
-                error: "l'operation affichage n'a pas aboutir ",
-              });
+              return res
+                .status(500)
+                .json({ error: "l'operation de la maladie n'a pas aboutir" });
             });
         },
       ],
@@ -207,7 +209,7 @@ module.exports = {
               });
             });
         },
-        (data, consultationFound) => {
+        (consultationFound, data) => {
           models.malade
             .findOne({
               where: { id: maladeId, consultationId: consultationFound.id },
@@ -229,7 +231,7 @@ module.exports = {
               });
             });
         },
-        (data, maladyFound, consultationFound) => {
+        (maladyFound, consultationFound, data) => {
           maladyFound
             .update({
               malady: malady ? malady : maladyFound.malady,
@@ -263,7 +265,6 @@ module.exports = {
     const userId = jwtUtils.getPatientId(headerAuth);
     const consultationId = req.params.consultationId;
     const maladeId = req.query.maladyId;
-    const { malady, level } = req.body;
     if (userId < 0) {
       return res
         .status(401)

@@ -9,16 +9,16 @@ module.exports = {
         type: Sequelize.INTEGER,
       },
       malady: {
-        allowNull: false,
         type: Sequelize.STRING,
+        allowNull: false,
       },
       level: {
-        allowNull: false,
         type: Sequelize.STRING,
-      },
-      refId: {
         allowNull: false,
+      },
+      consultationId: {
         type: Sequelize.INTEGER,
+        allowNull: false,
         references: {
           model: "Consultations",
           key: "id",

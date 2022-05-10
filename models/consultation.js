@@ -13,13 +13,13 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: {
           allowNull: false,
         },
-      }),
-        models.Consultation.belongsTo(models.patient, {
-          foreignKey: {
-            allowNull: false,
-          },
-        }),
-        models.Consultation.hasMany(models.malade);
+      });
+      models.Consultation.belongsTo(models.patient, {
+        foreignKey: {
+          allowNull: false,
+        },
+      });
+      models.Consultation.hasMany(models.malade);
     }
   }
   Consultation.init(
