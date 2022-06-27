@@ -3,6 +3,7 @@ const patientControl = require("./Routes/patientControl");
 const medecinControl = require("./Routes/medecinControl");
 const consultatControl = require("./Routes/consultatControl");
 const maladieControl = require("./Routes/maladiControl");
+const interventionControl = require("./Routes/interventionControl");
 
 exports.router = (() => {
   const apiRouter = express.Router();
@@ -31,6 +32,11 @@ exports.router = (() => {
   apiRouter
     .route("/consultations/:consultationId/edit")
     .put(consultatControl.updateConsult);
+
+  apiRouter
+    .route("/consultations/:consultationId")
+    .get(consultatControl.getConsult);
+
   apiRouter
     .route("/consultations/:consultationId/del")
     .delete(consultatControl.deleteConsult);
@@ -42,6 +48,32 @@ exports.router = (() => {
     .post(maladieControl.createMalade);
   apiRouter.route("/malades/:consultationId/").put(maladieControl.updateMalady);
   apiRouter.route("/malades/:consultationId/");
+
+  //route intervention
+  apiRouter
+    .route("/interventions/:interventionId")
+    .get(interventionControl.getIntervention);
+
+  apiRouter
+    .route("/interventions/")
+    .get(interventionControl.listMedecinIntervention);
+  //les interventions d'un consultation
+  apiRouter
+    .route("/interventions/consultation/:consultationId")
+    .get(interventionControl.listConsultationIntervention);
+  //intervention vue par un medecin
+  apiRouter
+    .route("/interventions/medecin/:interventionId")
+    .get(interventionControl.getMedecinIntervention);
+  apiRouter
+    .route("/interventions/:consultationId")
+    .post(interventionControl.createIntervention);
+  // apiRouter
+  //   .route("/interventions/:interventionId")
+  //   .put(interventionControl.updateIntervention);
+  // apiRouter
+  //   .route("interventions/:interventionId")
+  //   .delete(interventionControl.deleteIntervention);
 
   return apiRouter;
 })();

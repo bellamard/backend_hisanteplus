@@ -143,13 +143,7 @@ module.exports = {
               },
             })
             .then((maladyFound) => {
-              if (maladyFound.length > 0) {
-                data(maladyFound);
-              } else {
-                return res
-                  .status(403)
-                  .json({ error: "la maladie n'est pas trouvé" });
-              }
+              data(maladyFound);
             })
             .catch((err) => {
               console.warn(err);
@@ -160,7 +154,7 @@ module.exports = {
         },
       ],
       (maladyFound) => {
-        if (maladyFound) {
+        if (maladyFound.length > 0) {
           return res.status(200).json(maladyFound);
         } else {
           return res.status(403).json({ error: "maladies non trouver" });
@@ -270,12 +264,7 @@ module.exports = {
         .status(401)
         .json({ error: "vous avez un probleme de token!!! " });
     }
-    if (
-      (malady == null || malady === "") &&
-      (niveau == null || niveau === "")
-    ) {
-      return res.status(401).json({ error: "information incorrect" });
-    }
+
     async_Lib.waterfall(
       [
         (data) => {

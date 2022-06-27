@@ -58,6 +58,7 @@ module.exports = {
                 data(null, medecinFound, patientFound);
               })
               .catch((err) => {
+                console.warn(err);
                 return res.status(500).json({
                   error: "le Problème de verification du patient",
                 });
@@ -69,7 +70,7 @@ module.exports = {
           }
         },
         (medecinFound, patientFound, data) => {
-          if (medecinFound || patientFound) {
+          if (medecinFound && patientFound) {
             const createConsultation = models.Consultation.create({
               medecinId: medecinFound.id,
               patientId: patientFound.id,
@@ -141,7 +142,9 @@ module.exports = {
             })
             .catch((Err) => {
               return res.status(500).json({
-                error: "probleme lors de l'operation de recuperation " + Err,
+                error:
+                  "probleme de connexion lors de l'operation de recuperation " +
+                  Err,
               });
             });
         },
@@ -149,6 +152,56 @@ module.exports = {
       (consultations) => {
         if (consultations) {
           return res.status(200).json(consultations);
+        } else {
+          return res.status(500).json({ error: "pas des consultations" });
+        }
+      }
+    );
+  },
+  getConsult: (req, res) => {
+    const headerAuth = req.headers["authorization"];
+    const userId = jwtUtils.getPatientId(headerAuth);
+    const consultationId = parseInt(req.params.consultationId);
+    const fields = req.query.fields;
+    if (userId < 0) {
+      return res.status(403).json({ error: "utilisateur non trouver" });
+    }
+    async_Lib.waterfall(
+      [
+        (data) => {
+          models.Consultation.findOne({
+            attributes:
+              fields !== "*" && fields != null ? fields.split(",") : null,
+            where: {
+              [Op.or]: [{ medecinId: userId }, { patientId: userId }],
+              id: consultationId,
+            },
+            include: [
+              {
+                model: models.patient,
+                attributes: ["nomPatient"],
+              },
+              {
+                model: models.medecin,
+                attributes: ["nomMedecin"],
+              },
+            ],
+          })
+            .then((consultation) => {
+              data(consultation);
+            })
+            .catch((err) => {
+              return res.status(500).json({
+                error:
+                  "probleme de connexion lors de l'operation de recuperation " +
+                  err,
+              });
+            });
+        },
+      ],
+      (consultation) => {
+        if (consultation) {
+          return res.status(200).json(consultation);
         } else {
           return res.status(500).json({ error: "pas des consultations" });
         }

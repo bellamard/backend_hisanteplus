@@ -145,6 +145,7 @@ module.exports = {
                   token: jwtUtils.generateTokenForPatient(patient),
                 });
               } else {
+                console.warn(errBcrypt);
                 return res
                   .status(403)
                   .json({ error: "Mot de passe invalide  _ " + resBcrypt });
@@ -177,12 +178,13 @@ module.exports = {
       })
       .then((patient) => {
         if (patient) {
-          res.status(201).json(patient);
+          res.status(200).json(patient);
         } else {
           res.status(404).json({ error: "le patient n'existe pas" });
         }
       })
       .catch((err) => {
+        console.warn(err);
         res.status(500).json({ error: "l'operation n'a pas aboutir" });
       });
   },
@@ -264,6 +266,7 @@ module.exports = {
             })
             .then((patientfound) => data(null, patientfound))
             .catch((err) => {
+              console.warn(err);
               return res
                 .status(500)
                 .json({ error: "un probleme de verification du patient" });
