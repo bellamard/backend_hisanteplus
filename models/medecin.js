@@ -11,6 +11,7 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       models.medecin.hasMany(models.Consultation);
       models.medecin.hasMany(models.Intervention);
+      models.medecin.hasMany(models.authorization);
     }
   }
   medecin.init(

@@ -68,12 +68,12 @@ exports.router = (() => {
   apiRouter
     .route("/interventions/:consultationId")
     .post(interventionControl.createIntervention);
-  // apiRouter
-  //   .route("/interventions/:interventionId")
-  //   .put(interventionControl.updateIntervention);
-  // apiRouter
-  //   .route("interventions/:interventionId")
-  //   .delete(interventionControl.deleteIntervention);
+  apiRouter
+    .route("/interventions/:interventionId")
+    .put(interventionControl.updateIntervention);
+  apiRouter
+    .route("/interventions/:interventionId")
+    .delete(interventionControl.deleteIntervention);
 
   return apiRouter;
 })();

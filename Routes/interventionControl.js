@@ -409,20 +409,32 @@ module.exports = {
     const headerAuth = req.headers["authorization"];
     const userId = jwtUtils.getPatientId(headerAuth);
     const interventionId = parseInt(req.params.interventionId);
-    const consultationId = req.params.consultationId;
+    const consultationId = req.query.consultationId;
     const { dateIntervention, typeIntervention, nameIntervention } = req.body;
     if (
-      dateIntervention === "" ||
-      typeIntervention === "" ||
-      nameIntervention === "" ||
-      consultationId === "" ||
-      interventionId === ""
+      dateIntervention === "" &&
+      typeIntervention === "" &&
+      nameIntervention === ""
     ) {
       return res
         .status(401)
         .json({ error: "les informations sont incorrects" });
     }
-    if (consultationId == null || consultationId === "") {
+    if (
+      dateIntervention == null &&
+      typeIntervention == null &&
+      nameIntervention == null
+    ) {
+      return res
+        .status(401)
+        .json({ error: "les informations sont incorrects" });
+    }
+    if (
+      consultationId == null ||
+      consultationId === "" ||
+      interventionId === "" ||
+      interventionId == null
+    ) {
       return res.status(401).json({ error: "la reference est incorrects" });
     }
     if (userId < 0) {
@@ -502,7 +514,7 @@ module.exports = {
       ],
       (interventionUpdate) => {
         if (interventionUpdate) {
-          return res.status(201).json(maladyUpdate);
+          return res.status(201).json(interventionUpdate);
         } else {
           return res
             .status(403)
@@ -555,7 +567,7 @@ module.exports = {
               });
             });
         },
-        (data, consultationFound) => {
+        (consultationFound, data) => {
           models.Intervention.findOne({
             attributes: ["id"],
             where: { id: interventionId, consultationId: consultationFound.id },
@@ -570,14 +582,14 @@ module.exports = {
               }
             })
             .catch((err) => {
-              console.warn(err);
+              console.warn(consultationFound.id);
               return res.status(500).json({
                 error:
                   "operation de verification de l'intervention n'a pas aboutir ",
               });
             });
         },
-        (data, interventionFound, consultationFound) => {
+        (interventionFound, consultationFound, data) => {
           interventionFound
             .destroy()
             .then((interventionDelete) => {
@@ -587,14 +599,14 @@ module.exports = {
               console.warn(err);
               return res.status(500).json({
                 error:
-                  "l'operation de la modification de la maladie n' a pas aboutir",
+                  "l'operation de supression de l'intervention n' a pas aboutir",
               });
             });
         },
       ],
       (interventionDelete) => {
         if (interventionDelete) {
-          return res.status(201).json(maladyDelete);
+          return res.status(201).json(interventionDelete);
         } else {
           return res
             .status(403)
