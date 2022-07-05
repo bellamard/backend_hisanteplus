@@ -95,7 +95,6 @@ module.exports = {
       }
     );
   },
-
   getMalade: (req, res) => {
     const headerAuth = req.headers["authorization"];
     const userId = jwtUtils.getPatientId(headerAuth);
@@ -322,7 +321,7 @@ module.exports = {
               console.warn(err);
               return res.status(500).json({
                 error:
-                  "l'operation de la modification de la maladie n' a pas aboutir",
+                  "l'operation de la suppression de la maladie n' a pas aboutir",
               });
             });
         },
