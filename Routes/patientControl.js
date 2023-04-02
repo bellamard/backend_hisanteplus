@@ -243,7 +243,7 @@ module.exports = {
       ],
       (patientAll) => {
         if (patientAll) {
-          return res.status(201).json(patientAll);
+          return res.status(200).json(patientAll);
         } else {
           return res.status(403).json({
             error: "le patient n'est pas trouvée",
