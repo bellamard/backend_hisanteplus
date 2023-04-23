@@ -48,7 +48,7 @@ module.exports = {
       });
     }
     if (!PASSWORD_REGEX.test(password_medecin)) {
-      res.status(400).json({
+        res.status(400).json({
         error: "le mot de passe n'est repond pas au norme de securité requis ",
       });
     }
@@ -105,7 +105,7 @@ module.exports = {
                 mailMedecin: mail_medecin,
               })
               .then((new_medecin) => {
-                return res.status(201).json({
+                res.status(201).json({
                   medecinId: new_medecin.id,
                   mailMedecin: new_medecin.mailMedecin,
                 });

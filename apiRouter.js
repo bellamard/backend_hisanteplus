@@ -12,6 +12,7 @@ exports.router = (() => {
   apiRouter.route("/patients/registre").post(patientControl.registre);
   apiRouter.route("/patients/me").get(patientControl.getPatientProfil);
   apiRouter.route("/patients/all").get(patientControl.getPatients);
+  apiRouter.route("/patients/:id").get(patientControl.getPatientUser);
   apiRouter.route("/patients/me").put(patientControl.updatePatientId);
   apiRouter
     .route("/patients/updatePassword")
@@ -29,6 +30,7 @@ exports.router = (() => {
     .route("/consultations/new")
     .post(consultatControl.createConsultation);
   apiRouter.route("/consultations").get(consultatControl.listConsult);
+  apiRouter.route("/consultations/:patientId/all").get(consultatControl.listAllConsult);
   apiRouter
     .route("/consultations/:consultationId/edit")
     .put(consultatControl.updateConsult);

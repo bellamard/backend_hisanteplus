@@ -8,6 +8,34 @@ const EMAIL_REGEX =
 const PASSWORD_REGEX = /^(?=.*\d).{4,8}$/;
 
 module.exports = {
+getPatientUser: (req, res) => {
+    const headerAuth = req.headers["authorization"];
+    const userId = jwtUtils.getPatientId(headerAuth);
+    const idPat=parseInt(req.params.patientId);
+
+    if (userId < 0) {
+      return res
+        .status(400)
+        .json({ error: "vous avez un probleme de token!!! " });
+    }
+
+    models.patient
+      .findOne({
+        attributes: ["id", "nomPatient", "phonePatient","sexePatient"],
+        where: { id: idPat },
+      })
+      .then((patient) => {
+        if (patient) {
+          res.status(200).json(patient);
+        } else {
+          res.status(404).json({ error: "le patient n'existe pas" });
+        }
+      })
+      .catch((err) => {
+        console.warn(err);
+        res.status(500).json({ error: "l'operation n'a pas aboutir" });
+      });
+  },
   registre: (req, res) => {
     const {
       nom_patient,
@@ -59,7 +87,7 @@ module.exports = {
         models.patient
           .findOne({
             attributes: ["phonePatient"],
-            where: { phonePatient: phone_Patient },
+            where: { phonePatient: phone_patient },
           })
           .then((patient) => {
             done(null, patient);

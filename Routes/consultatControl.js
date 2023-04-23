@@ -158,6 +158,59 @@ module.exports = {
       }
     );
   },
+  listAllConsult: (req, res) => {
+    const fields = req.query.fields;
+    const limit = parseInt(req.query.limit);
+    const offset = parseInt(req.query.offset);
+    const order = req.query.order;
+    const headerAuth = req.headers["authorization"];
+    const userId = jwtUtils.getPatientId(headerAuth);
+    const PatId=req.params.patientId;
+    if (userId < 0) {
+      return res.status(403).json({ error: "utilisateur non trouver" });
+    }
+    async_Lib.waterfall(
+      [
+        (data) => {
+          models.Consultation.findAll({
+            order: [order != null ? order.split(":") : ["createdAt", "DESC"]],
+            attributes:
+              fields !== "*" && fields != null ? fields.split(",") : null,
+            limit: !isNaN(limit) ? limit : null,
+            offset: !isNaN(offset) ? offset : null,
+            where: { patientId: PatId },
+            include: [
+              {
+                model: models.patient,
+                attributes: ["nomPatient"],
+              },
+              {
+                model: models.medecin,
+                attributes: ["nomMedecin"],
+              },
+            ],
+          })
+            .then((consultations) => {
+              data(consultations);
+            })
+            .catch((Err) => {
+              return res.status(500).json({
+                error:
+                  "probleme de connexion lors de l'operation de recuperation " +
+                  Err,
+              });
+            });
+        },
+      ],
+      (consultations) => {
+        if (consultations) {
+          return res.status(200).json(consultations);
+        } else {
+          return res.status(500).json({ error: "pas des consultations" });
+        }
+      }
+    );
+  },
   getConsult: (req, res) => {
     const headerAuth = req.headers["authorization"];
     const userId = jwtUtils.getPatientId(headerAuth);
